@@ -56,7 +56,7 @@
 <body>
 <header>
   TopFun
-  <span>關關活動地圖（教會：紅｜攤位：藍｜您：黃｜隱藏攤位區：紅線）</span>
+  <span>教會：紅｜攤位：藍｜您：黃｜隱藏攤位：紫｜隱藏區域：紅線</span>
 </header>
 
 <div id="map"></div>
@@ -71,12 +71,16 @@
 
   // ========= 座標 =========
   const churchLatLng = [25.026832315958732, 121.55050045878713];
+
   const boothALatLng = [25.024786358646587, 121.5521447476479];
   const boothBLatLng = [25.025718101380193, 121.5502324791254];
   const boothCLatLng = [25.02657624033148, 121.55162769142812];
   const boothDLatLng = [25.02799638965638, 121.54993416188358];
 
-  // ⭐ 隱藏攤位區間（只畫紅線，不放 marker）
+  // ⭐ 新增：隱藏攤位（紫色）
+  const hiddenBoothLatLng = [25.026015823137005, 121.55101142288578];
+
+  // ⭐ 隱藏攤位區間（紅線）
   const hiddenAreaCoords = [
     [25.025677703180435, 121.55093458010093],
     [25.025724183699914, 121.55139335392677],
@@ -84,22 +88,30 @@
     [25.026289772238144, 121.55064546439432]
   ];
 
-  // ========= 紅色（教會）icon =========
+  // ========= ICON =========
+
+  // 教會紅色
   const redIcon = new L.Icon({
     iconUrl:
       "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZjAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNyIgaGVpZ2h0PSIzOCIgdmlld0JveD0iMCAwIDI3IDM4Ij48cGF0aCBkPSJNMjMuMzMzIDE0LjMzM2MwIDcuMzMzLTkuOTk5IDIxLjMzMy05Ljk5OSAyMS4zMzNTMy4zMzMgMjEuNjY2IDMuMzMzIDE0LjMzM2MwLTUuNSAzLjY2Ny05LjE2NyA5LjE2Ny05LjE2N3M5LjE2NyAzLjY2NyA5LjE2NyA5LjE2N3oiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEzIiByPSI1IiBmaWxsPSIjZmZmIi8+PC9zdmc+",
     iconSize: [27, 38],
-    iconAnchor: [13, 38],
-    popupAnchor: [0, -35]
+    iconAnchor: [13, 38]
   });
 
-  // ========= 黃色（使用者即時位置）icon =========
+  // 使用者黃色
   const yellowIcon = new L.Icon({
     iconUrl:
       "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjRkZEOTAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNyIgaGVpZ2h0PSIzOCIgdmlld0JveD0iMCAwIDI3IDM4Ij48cGF0aCBkPSJNMjMuMzMzIDE0LjMzM2MwIDcuMzMzLTkuOTk5IDIxLjMzMy05Ljk5OSAyMS4zMzNTMy4zMzMgMjEuNjY2IDMuMzMzIDE0LjMzM2MwLTUuNSAzLjY2Ny05LjE2NyA5LjE2Ny05LjE2N3M5LjE2NyAzLjY2NyA5LjE2NyA5LjE2N3oiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEzIiByPSI1IiBmaWxsPSIjZmZmIi8+PC9zdmc+",
     iconSize: [27, 38],
-    iconAnchor: [13, 38],
-    popupAnchor: [0, -35]
+    iconAnchor: [13, 38]
+  });
+
+  // 隱藏攤位紫色
+  const purpleIcon = new L.Icon({
+    iconUrl:
+      "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjODcwMEY3IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNyIgaGVpZ2h0PSIzOCIgdmlld0JveD0iMCAwIDI3IDM4Ij48cGF0aCBkPSJNMjMuMzMzIDE0LjMzM2MwIDcuMzMzLTkuOTk5IDIxLjMzMy05Ljk5OSAyMS4zMzNTMy4zMzMgMjEuNjY2IDMuMzMzIDE0LjMzM2MwLTUuNSAzLjY2Ny05LjE2NyA5LjE2Ny05LjE2N3M5LjE2NyAzLjY2NyA5LjE2NyA5LjE2N3oiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEzIiByPSI1IiBmaWxsPSIjZmZmIi8+PC9zdmc+",
+    iconSize: [27, 38],
+    iconAnchor: [13, 38]
   });
 
   // ========= 地圖初始化 =========
@@ -107,7 +119,7 @@
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
   map.setView(initialCenter, initialZoom);
 
-  // ⭐ 在地圖上畫「隱藏攤位區間」紅線多邊形（不填色）
+  // ⭐ 畫隱藏攤位的紅色區間線
   L.polygon(hiddenAreaCoords, {
     color: "red",
     weight: 3,
@@ -127,31 +139,25 @@
   let userMarker = null;
   let userCircle = null;
 
-  if ("geolocation" in navigator) {
-    navigator.geolocation.watchPosition(
-      pos => {
-        userLatLng = [pos.coords.latitude, pos.coords.longitude];
+  navigator.geolocation.watchPosition(
+    pos => {
+      userLatLng = [pos.coords.latitude, pos.coords.longitude];
+      if (!userMarker) {
+        userMarker = L.marker(userLatLng, { icon: yellowIcon }).addTo(map);
+        userCircle = L.circle(userLatLng, {
+          radius: pos.coords.accuracy || 20,
+          color: "#FFD700",
+          fillOpacity: 0.15
+        }).addTo(map);
+        showToast("已定位到您的位置（黃色）");
+      } else {
+        userMarker.setLatLng(userLatLng);
+        userCircle.setLatLng(userLatLng);
+      }
+    }
+  );
 
-        if (!userMarker) {
-          userMarker = L.marker(userLatLng, { icon: yellowIcon }).addTo(map);
-          userCircle = L.circle(userLatLng, {
-            radius: pos.coords.accuracy || 20,
-            color: "#FFD700",
-            fillOpacity: 0.15
-          }).addTo(map);
-          showToast("已定位到您的位置（黃色）");
-        } else {
-          userMarker.setLatLng(userLatLng);
-          userCircle.setLatLng(userLatLng);
-        }
-      },
-      () => showToast("無法取得定位，請確認已開啟定位權限")
-    );
-  } else {
-    showToast("此裝置不支援定位功能");
-  }
-
-  // ========= 教會 + 攤位（教會紅、攤位藍） =========
+  // ========= 標記教會 + 攤位 =========
   const spots = [
     { label: "卓越台北幸福行道會", coord: churchLatLng, icon: redIcon },
     { label: "攤位 A", coord: boothALatLng },
@@ -160,23 +166,38 @@
     { label: "攤位 D", coord: boothDLatLng }
   ];
 
+  // 普通攤位 & 教會
   spots.forEach(s => {
     L.marker(s.coord, s.icon ? { icon: s.icon } : {})
       .addTo(map)
       .bindPopup(`${s.label}<br><small>點我開啟 Google Maps 導航</small>`)
       .on("click", () => {
         if (!userLatLng) return showToast("尚未取得您的目前位置");
-
         const url =
           `https://www.google.com/maps/dir/?api=1` +
           `&origin=${userLatLng[0]},${userLatLng[1]}` +
           `&destination=${s.coord[0]},${s.coord[1]}` +
           `&travelmode=walking`;
-
         window.open(url, "_blank");
         showToast(`正在導航至「${s.label}」`);
       });
   });
+
+  // ⭐ 新增：紫色的隱藏攤位 marker
+  L.marker(hiddenBoothLatLng, { icon: purpleIcon })
+    .addTo(map)
+    .bindPopup(`隱藏攤位<br><small>點我開啟 Google Maps 導航</small>`)
+    .on("click", () => {
+      if (!userLatLng) return showToast("尚未取得您的目前位置");
+      const url =
+        `https://www.google.com/maps/dir/?api=1` +
+        `&origin=${userLatLng[0]},${userLatLng[1]}` +
+        `&destination=${hiddenBoothLatLng[0]},${hiddenBoothLatLng[1]}` +
+        `&travelmode=walking`;
+      window.open(url, "_blank");
+      showToast(`正在導航至「隱藏攤位」`);
+    });
+
 </script>
 </body>
 </html>
