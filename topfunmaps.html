@@ -150,20 +150,37 @@
     { label: "隱藏攤位",            coord: hiddenBoothLatLng, icon: purpleIcon }
   ];
 
-  // 在地圖上畫出所有 marker 並設定點擊導航
+  let lastClickedLabel = null; // 用來記錄上一次點的是哪個地標
+
+  // 在地圖上畫出所有 marker
   spots.forEach(s => {
-    L.marker(s.coord, { icon: s.icon })
+    const marker = L.marker(s.coord, { icon: s.icon })
       .addTo(map)
-      .bindPopup(`${s.label}<br><small>點我開啟 Google Maps 導航</small>`)
-      .on("click", () => {
-        // 不用即時定位：讓 Google Maps 自動以「目前位置」當起點
+      .bindPopup(`${s.label}<br><small>再點一次即可開啟 Google Maps 導航</small>`);
+
+    marker.on("click", () => {
+      // 如果上一次點的是同一個地標，且泡泡目前是開啟狀態 → 進入導航
+      if (lastClickedLabel === s.label && marker.isPopupOpen()) {
         const url =
           `https://www.google.com/maps/dir/?api=1` +
           `&destination=${s.coord[0]},${s.coord[1]}` +
           `&travelmode=walking`;
         window.open(url, "_blank");
         showToast(`正在開啟前往「${s.label}」的導航`);
-      });
+        // 導航後重置狀態，避免誤觸
+        lastClickedLabel = null;
+      } else {
+        // 第一次點 或 剛換另一個地標：只開啟資訊泡泡
+        marker.openPopup();
+        lastClickedLabel = s.label;
+        showToast(`已選取「${s.label}」，再點一次開始導航`);
+      }
+    });
+  });
+
+  // 點地圖空白處時，重置 lastClickedLabel，避免誤觸導航
+  map.on("click", () => {
+    lastClickedLabel = null;
   });
 </script>
 </body>
