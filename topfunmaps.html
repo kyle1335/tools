@@ -5,6 +5,7 @@
   <title>TopFun - 關關活動地圖</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- Leaflet CSS -->
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -56,12 +57,13 @@
 <body>
 <header>
   TopFun
-  <span>教會：紅｜攤位：藍｜您：黃｜隱藏攤位：紫｜隱藏區域：紅線</span>
+  <span>教會：紅｜攤位：藍｜隱藏攤位：紫｜隱藏區域：紅線</span>
 </header>
 
 <div id="map"></div>
 <div id="toast" class="toast"></div>
 
+<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
@@ -69,18 +71,15 @@
   const initialCenter = [25.026773785, 121.55099485];
   const initialZoom   = 17.6;
 
-  // ========= 座標 =========
-  const churchLatLng = [25.026832315958732, 121.55050045878713];
-
-  const boothALatLng = [25.024786358646587, 121.5521447476479];
-  const boothBLatLng = [25.025718101380193, 121.5502324791254];
-  const boothCLatLng = [25.02657624033148, 121.55162769142812];
-  const boothDLatLng = [25.02799638965638, 121.54993416188358];
-
-  // ⭐ 新增：隱藏攤位（紫色）
+  // ========= 各座標 =========
+  const churchLatLng      = [25.026832315958732, 121.55050045878713];
+  const boothALatLng      = [25.024786358646587, 121.5521447476479];
+  const boothBLatLng      = [25.025718101380193, 121.5502324791254];
+  const boothCLatLng      = [25.02657624033148, 121.55162769142812];
+  const boothDLatLng      = [25.02799638965638, 121.54993416188358];
   const hiddenBoothLatLng = [25.026015823137005, 121.55101142288578];
 
-  // ⭐ 隱藏攤位區間（紅線）
+  // 隱藏攤位區間（紅線多邊形）
   const hiddenAreaCoords = [
     [25.025677703180435, 121.55093458010093],
     [25.025724183699914, 121.55139335392677],
@@ -88,45 +87,52 @@
     [25.026289772238144, 121.55064546439432]
   ];
 
-  // ========= ICON =========
+  // ========= ICON 設定 =========
 
-  // 教會紅色
+  // 教會：紅色 icon
   const redIcon = new L.Icon({
     iconUrl:
       "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZjAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNyIgaGVpZ2h0PSIzOCIgdmlld0JveD0iMCAwIDI3IDM4Ij48cGF0aCBkPSJNMjMuMzMzIDE0LjMzM2MwIDcuMzMzLTkuOTk5IDIxLjMzMy05Ljk5OSAyMS4zMzNTMy4zMzMgMjEuNjY2IDMuMzMzIDE0LjMzM2MwLTUuNSAzLjY2Ny05LjE2NyA5LjE2Ny05LjE2N3M5LjE2NyAzLjY2NyA5LjE2NyA5LjE2N3oiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEzIiByPSI1IiBmaWxsPSIjZmZmIi8+PC9zdmc+",
     iconSize: [27, 38],
-    iconAnchor: [13, 38]
+    iconAnchor: [13, 38],
+    popupAnchor: [0, -35]
   });
 
-  // 使用者黃色
-  const yellowIcon = new L.Icon({
+  // 攤位：使用 Leaflet 預設藍色 icon
+  const blueIcon = new L.Icon({
     iconUrl:
-      "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjRkZEOTAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNyIgaGVpZ2h0PSIzOCIgdmlld0JveD0iMCAwIDI3IDM4Ij48cGF0aCBkPSJNMjMuMzMzIDE0LjMzM2MwIDcuMzMzLTkuOTk5IDIxLjMzMy05Ljk5OSAyMS4zMzNTMy4zMzMgMjEuNjY2IDMuMzMzIDE0LjMzM2MwLTUuNSAzLjY2Ny05LjE2NyA5LjE2Ny05LjE2N3M5LjE2NyAzLjY2NyA5LjE2NyA5LjE2N3oiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEzIiByPSI1IiBmaWxsPSIjZmZmIi8+PC9zdmc+",
-    iconSize: [27, 38],
-    iconAnchor: [13, 38]
+      "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+    shadowUrl:
+      "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
   });
 
-  // 隱藏攤位紫色
+  // 隱藏攤位：紫色 icon
   const purpleIcon = new L.Icon({
     iconUrl:
       "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjODcwMEY3IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNyIgaGVpZ2h0PSIzOCIgdmlld0JveD0iMCAwIDI3IDM4Ij48cGF0aCBkPSJNMjMuMzMzIDE0LjMzM2MwIDcuMzMzLTkuOTk5IDIxLjMzMy05Ljk5OSAyMS4zMzNTMy4zMzMgMjEuNjY2IDMuMzMzIDE0LjMzM2MwLTUuNSAzLjY2Ny05LjE2NyA5LjE2Ny05LjE2N3M5LjE2NyAzLjY2NyA5LjE2NyA5LjE2N3oiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEzIiByPSI1IiBmaWxsPSIjZmZmIi8+PC9zdmc+",
     iconSize: [27, 38],
-    iconAnchor: [13, 38]
+    iconAnchor: [13, 38],
+    popupAnchor: [0, -35]
   });
 
-  // ========= 地圖初始化 =========
+  // ========= 初始化地圖 =========
   const map = L.map("map");
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png")
+    .addTo(map);
   map.setView(initialCenter, initialZoom);
 
-  // ⭐ 畫隱藏攤位的紅色區間線
+  // 隱藏攤位區間：紅色多邊形線（不填色）
   L.polygon(hiddenAreaCoords, {
     color: "red",
     weight: 3,
     fill: false
   }).addTo(map);
 
-  // ========= Toast =========
+  // ========= Toast 小提示 =========
   const toastEl = document.getElementById("toast");
   function showToast(msg, ms = 2500) {
     toastEl.textContent = msg;
@@ -134,70 +140,31 @@
     setTimeout(() => (toastEl.style.display = "none"), ms);
   }
 
-  // ========= 即時位置（黃色） =========
-  let userLatLng = null;
-  let userMarker = null;
-  let userCircle = null;
-
-  navigator.geolocation.watchPosition(
-    pos => {
-      userLatLng = [pos.coords.latitude, pos.coords.longitude];
-      if (!userMarker) {
-        userMarker = L.marker(userLatLng, { icon: yellowIcon }).addTo(map);
-        userCircle = L.circle(userLatLng, {
-          radius: pos.coords.accuracy || 20,
-          color: "#FFD700",
-          fillOpacity: 0.15
-        }).addTo(map);
-        showToast("已定位到您的位置（黃色）");
-      } else {
-        userMarker.setLatLng(userLatLng);
-        userCircle.setLatLng(userLatLng);
-      }
-    }
-  );
-
-  // ========= 標記教會 + 攤位 =========
+  // ========= 所有標記（教會 + 攤位 + 隱藏攤位） =========
   const spots = [
-    { label: "卓越台北幸福行道會", coord: churchLatLng, icon: redIcon },
-    { label: "攤位 A", coord: boothALatLng },
-    { label: "攤位 B", coord: boothBLatLng },
-    { label: "攤位 C", coord: boothCLatLng },
-    { label: "攤位 D", coord: boothDLatLng }
+    { label: "卓越台北幸福行道會", coord: churchLatLng,  icon: redIcon },
+    { label: "攤位 A",              coord: boothALatLng,  icon: blueIcon },
+    { label: "攤位 B",              coord: boothBLatLng,  icon: blueIcon },
+    { label: "攤位 C",              coord: boothCLatLng,  icon: blueIcon },
+    { label: "攤位 D",              coord: boothDLatLng,  icon: blueIcon },
+    { label: "隱藏攤位",            coord: hiddenBoothLatLng, icon: purpleIcon }
   ];
 
-  // 普通攤位 & 教會
+  // 在地圖上畫出所有 marker 並設定點擊導航
   spots.forEach(s => {
-    L.marker(s.coord, s.icon ? { icon: s.icon } : {})
+    L.marker(s.coord, { icon: s.icon })
       .addTo(map)
       .bindPopup(`${s.label}<br><small>點我開啟 Google Maps 導航</small>`)
       .on("click", () => {
-        if (!userLatLng) return showToast("尚未取得您的目前位置");
+        // 不用即時定位：讓 Google Maps 自動以「目前位置」當起點
         const url =
           `https://www.google.com/maps/dir/?api=1` +
-          `&origin=${userLatLng[0]},${userLatLng[1]}` +
           `&destination=${s.coord[0]},${s.coord[1]}` +
           `&travelmode=walking`;
         window.open(url, "_blank");
-        showToast(`正在導航至「${s.label}」`);
+        showToast(`正在開啟前往「${s.label}」的導航`);
       });
   });
-
-  // ⭐ 新增：紫色的隱藏攤位 marker
-  L.marker(hiddenBoothLatLng, { icon: purpleIcon })
-    .addTo(map)
-    .bindPopup(`隱藏攤位<br><small>點我開啟 Google Maps 導航</small>`)
-    .on("click", () => {
-      if (!userLatLng) return showToast("尚未取得您的目前位置");
-      const url =
-        `https://www.google.com/maps/dir/?api=1` +
-        `&origin=${userLatLng[0]},${userLatLng[1]}` +
-        `&destination=${hiddenBoothLatLng[0]},${hiddenBoothLatLng[1]}` +
-        `&travelmode=walking`;
-      window.open(url, "_blank");
-      showToast(`正在導航至「隱藏攤位」`);
-    });
-
 </script>
 </body>
 </html>
