@@ -5,48 +5,14 @@
   <title>TopFun - 關關活動地圖</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-
   <style>
-    body {
-      margin: 0;
-      font-family: system-ui, sans-serif;
-      background: #f7f7f7;
-    }
-    header {
-      padding: 12px 16px;
-      background: #fff;
-      border-bottom: 1px solid #ddd;
-      font-size: 20px;
-      font-weight: 600;
-    }
-    header span {
-      display: block;
-      font-size: 14px;
-      color: #666;
-    }
-    #map {
-      width: 100%;
-      height: 85vh;
-      border-radius: 12px;
-      border: 1px solid #ccc;
-      margin: 16px auto;
-      background: #eaeaea;
-    }
-    .toast {
-      position: fixed;
-      left: 50%;
-      bottom: 12px;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.75);
-      color: #fff;
-      padding: 6px 12px;
-      border-radius: 999px;
-      font-size: 12px;
-      z-index: 999;
-      display: none;
-    }
+    body { margin:0; font-family:system-ui; background:#f7f7f7; }
+    header { padding:12px 16px; background:#fff; border-bottom:1px solid #ddd; font-size:20px; font-weight:600; }
+    header span { font-size:14px; color:#666; }
+    #map { width:100%; height:85vh; border-radius:12px; border:1px solid #ccc; margin:16px auto; }
+    .toast { position:fixed; left:50%; bottom:12px; transform:translateX(-50%); background:rgba(0,0,0,0.75);
+             color:#fff; padding:6px 12px; border-radius:999px; font-size:12px; display:none; z-index:999; }
   </style>
 </head>
 
@@ -62,86 +28,85 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-  // ========= 初始地圖 =========
-  const initialCenter = [25.026773785, 121.55099485];
-  const initialZoom   = 17.6;
-
   const map = L.map("map");
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
-  map.setView(initialCenter, initialZoom);
+  map.setView([25.026773785, 121.55099485], 17.6);
 
-  // ========= Toast =========
   const toastEl = document.getElementById("toast");
-  function showToast(msg, ms = 2500) {
+  function showToast(msg, ms=2000){
     toastEl.textContent = msg;
     toastEl.style.display = "block";
-    setTimeout(() => (toastEl.style.display = "none"), ms);
+    setTimeout(()=> toastEl.style.display="none", ms);
   }
 
-  // ========= ICON =========
+  // Icons
   const redIcon = new L.Icon({
     iconUrl:"data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZjAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNyIgaGVpZ2h0PSIzOCI+PHBhdGggZD0iTTIzLjMzMyAxNC4zMzNjMCA3LjMzMy05Ljk5OSAyMS4zMzMtOS45OTkgMjEuMzMzUzMuMzMzIDIxLjY2NiAzLjMzMyAxNC4zMzNjMC01LjUgMy42NjctOS4xNjcgOS4xNjctOS4xNjdTMjMuMzMzIDguODMzIDIzLjMzMyAxNC4zMzN6Ii8+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMyIgcj0iNSIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==",
-    iconSize:[27,38], iconAnchor:[13,38], popupAnchor:[0,-35]
+    iconSize:[27,38], iconAnchor:[13,38]
   });
 
   const blueIcon = new L.Icon({
     iconUrl:"https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
     shadowUrl:"https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-    iconSize:[25,41], iconAnchor:[12,41], popupAnchor:[1,-34]
+    iconSize:[25,41], iconAnchor:[12,41]
   });
 
   const purpleIcon = new L.Icon({
     iconUrl:"data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjODcwMEY3IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNyIgaGVpZ2h0PSIzOCI+PHBhdGggZD0iTTIzLjMzMyAxNC4zMzNjMCA3LjMzMy05Ljk5OSAyMS4zMzMtOS45OTkgMjEuMzMzUzMuMzMzIDIxLjY2NiAzLjMzMyAxNC4zMzNjMC01LjUgMy42NjctOS4xNjcgOS4xNjctOS4xNjdTMjMuMzMzIDguODMzIDIzLjMzMyAxNC4zMzN6Ii8+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMyIgcj0iNSIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==",
-    iconSize:[27,38], iconAnchor:[13,38], popupAnchor:[0,-35]
+    iconSize:[27,38], iconAnchor:[13,38]
   });
 
-  // ========= 地標座標 =========
-  const church      = { name:"卓越台北幸福行道會", icon:redIcon,   coord:[25.026832315958732,121.55050045878713] };
-  const boothA      = { name:"攤位 A|身價大解密",  icon:blueIcon, coord:[25.024786358646587,121.5521447476479] };
-  const boothB      = { name:"攤位 B|真假寶藏局",  icon:blueIcon, coord:[25.025718101380193,121.5502324791254] };
-  const boothC      = { name:"攤位 C|嗅覺估價王",  icon:blueIcon, coord:[25.02799638965638,121.54993416188358] };
-  const boothD      = { name:"攤位 D|味覺估價王",  icon:blueIcon, coord:[25.02657624033148,121.55162769142812] };
-  const boothE      = { name:"攤位 E|隱藏攤位",    icon:purpleIcon, coord:[25.026015823137005,121.55101142288578] };
+  // Spot data
+  const spots = [
+    { name:"卓越台北幸福行道會",  icon:redIcon,   coord:[25.026832315958732,121.55050045878713] },
+    { name:"攤位 A｜身價大解密",   icon:blueIcon,  coord:[25.024786358646587,121.5521447476479] },
+    { name:"攤位 B｜真假寶藏局",   icon:blueIcon,  coord:[25.025718101380193,121.5502324791254] },
+    { name:"攤位 C｜嗅覺估價王",   icon:blueIcon,  coord:[25.02799638965638,121.54993416188358] },
+    { name:"攤位 D｜味覺估價王",   icon:blueIcon,  coord:[25.02657624033148,121.55162769142812] },
+    { name:"攤位 E｜隱藏攤位",     icon:purpleIcon,coord:[25.026015823137005,121.55101142288578] }
+  ];
 
-  const spots = [church, boothA, boothB, boothC, boothD, boothE];
-
-  // ========= 隱藏區（紅線） =========
+  // Red boundary
   L.polygon([
     [25.025677703180435,121.55093458010093],
     [25.025724183699914,121.55139335392677],
     [25.02643330446288,121.55113760486803],
     [25.026289772238144,121.55064546439432]
-  ],{ color:"red", weight:3, fill:false }).addTo(map);
+  ],{color:"red",weight:3,fill:false}).addTo(map);
 
-  // ========= 點兩次才導航的功能 =========
-  let lastClicked = null;
+  // ======【全新：點兩次才導航】======
+  let lastClickLabel = null;
+  let lastClickTime = 0;
 
-  spots.forEach(s => {
+  spots.forEach(s=>{
     const marker = L.marker(s.coord,{icon:s.icon})
       .addTo(map)
       .bindPopup(`${s.name}<br><small>再點一次即可導航</small>`);
 
-    marker.on("click",()=>{
-      if(lastClicked === s.name && marker.isPopupOpen()){
+    marker.on("click", () => {
+
+      const now = Date.now();
+
+      if(lastClickLabel === s.name && (now - lastClickTime) < 1500){
         // 第二次點 → 導航
-        window.open(
-          `https://www.google.com/maps/dir/?api=1&destination=${s.coord[0]},${s.coord[1]}&travelmode=walking`,
-          "_blank"
-        );
+        const url =
+          `https://www.google.com/maps/dir/?api=1` +
+          `&destination=${s.coord[0]},${s.coord[1]}` +
+          `&travelmode=walking`;
+        window.open(url, "_blank");
         showToast(`正在導航至「${s.name}」`);
-        lastClicked = null;
-      }else{
-        // 第一次點 → 顯示泡泡
+        lastClickLabel = null;
+      } else {
+        // 第一次點 → 只開 popup
         marker.openPopup();
-        lastClicked = s.name;
         showToast(`已選取「${s.name}」，再點一次導航`);
+        lastClickLabel = s.name;
+        lastClickTime = now;
       }
     });
   });
 
-  // 點地圖空白處取消選取
-  map.on("click",()=>{ lastClicked = null; });
-
+  map.on("click",()=>{ lastClickLabel=null; });
 </script>
 </body>
 </html>
