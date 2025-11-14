@@ -6,11 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    crossorigin=""
-  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
   <style>
     body {
@@ -57,82 +53,24 @@
 <body>
 <header>
   TopFun
-  <span>教會：紅｜攤位：藍｜隱藏攤位：紫｜隱藏區域：紅線</span>
+  <span>教會：紅｜攤位：藍｜攤位 E：紫｜隱藏區域：紅線</span>
 </header>
 
 <div id="map"></div>
 <div id="toast" class="toast"></div>
 
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-  // ========= 初始視野 =========
+  // ========= 初始地圖 =========
   const initialCenter = [25.026773785, 121.55099485];
   const initialZoom   = 17.6;
 
-  // ========= 各座標 =========
-  const churchLatLng      = [25.026832315958732, 121.55050045878713];
-  const boothALatLng      = [25.024786358646587, 121.5521447476479];
-  const boothBLatLng      = [25.025718101380193, 121.5502324791254];
-  const boothCLatLng      = [25.02799638965638, 121.54993416188358];
-  const boothDLatLng      = [25.02657624033148, 121.55162769142812];
-  const hiddenBoothLatLng = [25.026015823137005, 121.55101142288578];
-
-  // 隱藏攤位區間（紅線多邊形）
-  const hiddenAreaCoords = [
-    [25.025677703180435, 121.55093458010093],
-    [25.025724183699914, 121.55139335392677],
-    [25.02643330446288, 121.55113760486803],
-    [25.026289772238144, 121.55064546439432]
-  ];
-
-  // ========= ICON 設定 =========
-
-  // 教會：紅色 icon
-  const redIcon = new L.Icon({
-    iconUrl:
-      "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZjAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNyIgaGVpZ2h0PSIzOCIgdmlld0JveD0iMCAwIDI3IDM4Ij48cGF0aCBkPSJNMjMuMzMzIDE0LjMzM2MwIDcuMzMzLTkuOTk5IDIxLjMzMy05Ljk5OSAyMS4zMzNTMy4zMzMgMjEuNjY2IDMuMzMzIDE0LjMzM2MwLTUuNSAzLjY2Ny05LjE2NyA5LjE2Ny05LjE2N3M5LjE2NyAzLjY2NyA5LjE2NyA5LjE2N3oiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEzIiByPSI1IiBmaWxsPSIjZmZmIi8+PC9zdmc+",
-    iconSize: [27, 38],
-    iconAnchor: [13, 38],
-    popupAnchor: [0, -35]
-  });
-
-  // 攤位：使用 Leaflet 預設藍色 icon
-  const blueIcon = new L.Icon({
-    iconUrl:
-      "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-    shadowUrl:
-      "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-  });
-
-  // 隱藏攤位：紫色 icon
-  const purpleIcon = new L.Icon({
-    iconUrl:
-      "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjODcwMEY3IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNyIgaGVpZ2h0PSIzOCIgdmlld0JveD0iMCAwIDI3IDM4Ij48cGF0aCBkPSJNMjMuMzMzIDE0LjMzM2MwIDcuMzMzLTkuOTk5IDIxLjMzMy05Ljk5OSAyMS4zMzNTMy4zMzMgMjEuNjY2IDMuMzMzIDE0LjMzM2MwLTUuNSAzLjY2Ny05LjE2NyA5LjE2Ny05LjE2N3M5LjE2NyAzLjY2NyA5LjE2NyA5LjE2N3oiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEzIiByPSI1IiBmaWxsPSIjZmZmIi8+PC9zdmc+",
-    iconSize: [27, 38],
-    iconAnchor: [13, 38],
-    popupAnchor: [0, -35]
-  });
-
-  // ========= 初始化地圖 =========
   const map = L.map("map");
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png")
-    .addTo(map);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
   map.setView(initialCenter, initialZoom);
 
-  // 隱藏攤位區間：紅色多邊形線（不填色）
-  L.polygon(hiddenAreaCoords, {
-    color: "red",
-    weight: 3,
-    fill: false
-  }).addTo(map);
-
-  // ========= Toast 小提示 =========
+  // ========= Toast =========
   const toastEl = document.getElementById("toast");
   function showToast(msg, ms = 2500) {
     toastEl.textContent = msg;
@@ -140,48 +78,70 @@
     setTimeout(() => (toastEl.style.display = "none"), ms);
   }
 
-  // ========= 所有標記（教會 + 攤位 + 隱藏攤位） =========
-  const spots = [
-    { label: "卓越台北幸福行道會", coord: churchLatLng,  icon: redIcon },
-    { label: "攤位 A",              coord: boothALatLng,  icon: blueIcon },
-    { label: "攤位 B",              coord: boothBLatLng,  icon: blueIcon },
-    { label: "攤位 C",              coord: boothCLatLng,  icon: blueIcon },
-    { label: "攤位 D",              coord: boothDLatLng,  icon: blueIcon },
-    { label: "隱藏攤位",            coord: hiddenBoothLatLng, icon: purpleIcon }
-  ];
+  // ========= ICON =========
+  const redIcon = new L.Icon({
+    iconUrl:"data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZjAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNyIgaGVpZ2h0PSIzOCI+PHBhdGggZD0iTTIzLjMzMyAxNC4zMzNjMCA3LjMzMy05Ljk5OSAyMS4zMzMtOS45OTkgMjEuMzMzUzMuMzMzIDIxLjY2NiAzLjMzMyAxNC4zMzNjMC01LjUgMy42NjctOS4xNjcgOS4xNjctOS4xNjdTMjMuMzMzIDguODMzIDIzLjMzMyAxNC4zMzN6Ii8+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMyIgcj0iNSIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==",
+    iconSize:[27,38], iconAnchor:[13,38], popupAnchor:[0,-35]
+  });
 
-  let lastClickedLabel = null; // 用來記錄上一次點的是哪個地標
+  const blueIcon = new L.Icon({
+    iconUrl:"https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+    shadowUrl:"https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+    iconSize:[25,41], iconAnchor:[12,41], popupAnchor:[1,-34]
+  });
 
-  // 在地圖上畫出所有 marker
+  const purpleIcon = new L.Icon({
+    iconUrl:"data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjODcwMEY3IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNyIgaGVpZ2h0PSIzOCI+PHBhdGggZD0iTTIzLjMzMyAxNC4zMzNjMCA3LjMzMy05Ljk5OSAyMS4zMzMtOS45OTkgMjEuMzMzUzMuMzMzIDIxLjY2NiAzLjMzMyAxNC4zMzNjMC01LjUgMy42NjctOS4xNjcgOS4xNjctOS4xNjdTMjMuMzMzIDguODMzIDIzLjMzMyAxNC4zMzN6Ii8+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMyIgcj0iNSIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==",
+    iconSize:[27,38], iconAnchor:[13,38], popupAnchor:[0,-35]
+  });
+
+  // ========= 地標座標 =========
+  const church      = { name:"卓越台北幸福行道會", icon:redIcon,   coord:[25.026832315958732,121.55050045878713] };
+  const boothA      = { name:"攤位 A｜身價大解密",  icon:blueIcon, coord:[25.024786358646587,121.5521447476479] };
+  const boothB      = { name:"攤位 B｜真假寶藏局",  icon:blueIcon, coord:[25.025718101380193,121.5502324791254] };
+  const boothC      = { name:"攤位 C｜嗅覺估價王",  icon:blueIcon, coord:[25.02799638965638,121.54993416188358] };
+  const boothD      = { name:"攤位 D｜味覺估價王",  icon:blueIcon, coord:[25.02657624033148,121.55162769142812] };
+  const boothE      = { name:"攤位 E｜隱藏攤位",    icon:purpleIcon, coord:[25.026015823137005,121.55101142288578] };
+
+  const spots = [church, boothA, boothB, boothC, boothD, boothE];
+
+  // ========= 隱藏區（紅線） =========
+  L.polygon([
+    [25.025677703180435,121.55093458010093],
+    [25.025724183699914,121.55139335392677],
+    [25.02643330446288,121.55113760486803],
+    [25.026289772238144,121.55064546439432]
+  ],{ color:"red", weight:3, fill:false }).addTo(map);
+
+  // ========= 點兩次才導航的功能 =========
+  let lastClicked = null;
+
   spots.forEach(s => {
-    const marker = L.marker(s.coord, { icon: s.icon })
+    const marker = L.marker(s.coord,{icon:s.icon})
       .addTo(map)
-      .bindPopup(`${s.label}<br><small>再點一次即可開啟 Google Maps 導航</small>`);
+      .bindPopup(`${s.name}<br><small>再點一次即可導航</small>`);
 
-    marker.on("click", () => {
-      // 如果上一次點的是同一個地標，且泡泡目前是開啟狀態 → 進入導航
-      if (lastClickedLabel === s.label && marker.isPopupOpen()) {
-        const url =
-          `https://www.google.com/maps/dir/?api=1` +
-          `&destination=${s.coord[0]},${s.coord[1]}` +
-          `&travelmode=walking`;
-        window.open(url, "_blank");
-        showToast(`正在開啟前往「${s.label}」的導航`);
-        // 導航後重置狀態，避免誤觸
-        lastClickedLabel = null;
-      } else {
-        // 第一次點 或 剛換另一個地標：只開啟資訊泡泡
+    marker.on("click",()=>{
+      if(lastClicked === s.name && marker.isPopupOpen()){
+        // 第二次點 → 導航
+        window.open(
+          `https://www.google.com/maps/dir/?api=1&destination=${s.coord[0]},${s.coord[1]}&travelmode=walking`,
+          "_blank"
+        );
+        showToast(`正在導航至「${s.name}」`);
+        lastClicked = null;
+      }else{
+        // 第一次點 → 顯示泡泡
         marker.openPopup();
-        lastClickedLabel = s.label;
-        showToast(`已選取「${s.label}」，再點一次開始導航`);
+        lastClicked = s.name;
+        showToast(`已選取「${s.name}」，再點一次導航`);
       }
     });
   });
 
-  // 點地圖空白處時，重置 lastClickedLabel，避免誤觸導航
-  map.on("click", () => {
-    lastClickedLabel = null;
-  });
+  // 點地圖空白處取消選取
+  map.on("click",()=>{ lastClicked = null; });
+
 </script>
 </body>
 </html>
