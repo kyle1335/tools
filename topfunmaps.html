@@ -41,9 +41,9 @@
       height: 85vh;
       border-radius: 12px;
       border: 1px solid #cccccc;
-      margin: 16px auto; /* 上下邊距，左右在 width:100% 下無效，但保留不影響 */
-      max-width: 100%; /* 確保地圖不會超出父容器 */
-      box-sizing: border-box; /* 確保 padding 和 border 不會增加元素總寬度 */
+      margin: 16px auto;
+      max-width: 100%;
+      box-sizing: border-box;
       background: #eaeaea;
     }
 
@@ -58,13 +58,13 @@
       border-radius: 999px;
       font-size: 12px;
       z-index: 999;
-      display: none; /* 預設隱藏 */
-      opacity: 0; /* 用於淡入淡出效果 */
-      transition: opacity 0.3s ease-in-out; /* 淡入淡出過渡效果 */
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
     }
 
     .toast.show {
-      opacity: 1; /* 顯示時完全不透明 */
+      opacity: 1;
     }
   </style>
 </head>
@@ -86,9 +86,9 @@
 ></script>
 
 <script>
-  // ========= 初始視野 =========
-  const initialCenter = [25.026773785, 121.55099485];
-  const initialZoom   = 17.6;
+  // ========= 初始視野 (現在會根據教會位置設定) =========
+  // const initialCenter = [25.026773785, 121.55099485]; // 不再需要，直接用教會座標
+  const initialZoom   = 17.6; // 初始縮放級別仍保留
 
   // ========= 座標 =========
   const churchLatLng = [25.026832315958732, 121.55050045878713];
@@ -98,10 +98,8 @@
   const boothCLatLng = [25.02657624033148, 121.55162769142812];
   const boothDLatLng = [25.02799638965638, 121.54993416188358];
 
-  // 隱藏攤位（紫色）
   const hiddenBoothLatLng = [25.026015823137005, 121.55101142288578];
 
-  // 隱藏攤位區間（紅線）
   const hiddenAreaCoords = [
     [25.025677703180435, 121.55093458010093],
     [25.025724183699914, 121.55139335392677],
@@ -110,16 +108,13 @@
   ];
 
   // ========= ICON 定義 =========
-
-  // 教會紅色 Icon
   const redIcon = new L.Icon({
     iconUrl:
       "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZjAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNyIgaGVpZ2h0PSIzOCIgdmlld0JveD0iMCAwIDI3IDM4Ij48cGF0aCBkPSJNMjMuMzMzIDE0LjMzM2MwIDcuMzMzLTkuOTk5IDIxLjMzMy05Ljk5OSAyMS4zMzNTMy4zMzMgMjEuNjY2IDMuMzMzIDE0LjMzM2MwLTUuNSAzLjY2Ny05LjE2NyA5LjE2Ny05LjE2N3M5LjE2NyAzLjY2NyA5LjE2NyA5LjE2N3oiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEzIiByPSI1IiBmaWxsPSIjZmZmIi8+PC9zdmc+",
     iconSize: [27, 38],
-    iconAnchor: [13, 38] // 錨點設置在地圖標記的底部中央
+    iconAnchor: [13, 38]
   });
 
-  // 使用者黃色 Icon
   const yellowIcon = new L.Icon({
     iconUrl:
       "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjRkZEOTAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNyIgaGVpZ2h0PSIzOCIgdmlld0JveD0iMCAwIDI3IDM4Ij48cGF0aCBkPSJNMjMuMzMzIDE0LjMzM2MwIDcuMzMzLTkuOTk5IDIxLjMzMy05Ljk5OSAyMS4zMzNTMy4zMzMgMjEuNjY2IDMuMzMzIDE0LjMzM2MwLTUuNSAzLjY2Ny05LjE2NyA5LjE2Ny05LjE2N3M5LjE2NyAzLjY2NyA5LjE2NyA5LjE2N3oiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEzIiByPSI1IiBmaWxsPSIjZmZmIi8+PC9zdmc+",
@@ -127,15 +122,14 @@
     iconAnchor: [13, 38]
   });
 
-  // 隱藏攤位紫色 Icon
   const purpleIcon = new L.Icon({
     iconUrl:
-      "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjODcwMEY3IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNyIgaGVpZ2h0PSIzOCIgdmlld0JveD0iMCAwIDI3IDM4Ij48cGF0aCBkPSJNMjMuMzMzIDE0LjMzM2MwIDcuMzMzLTkuOTk5IDIxLjMzMy05Ljk5OSAyMS4zMzNTMy4zMzMgMjEuNjY2IDMuMzMzIDE0LjMzM2MwLTUuNSAzLjY2Ny05LjE2NyA5LjE2Ny05LjE2N3M5LjE2NyAzLjY2NyA5LjE2NyA5LjE2N3oiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEzIiByPSI1IiBmaWxsPSIjZmZmIi8+PC9zdmc+",
+      "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjODcwMEY3IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNyIgaGVpZ2h0PSIzOCIgdmlldWJveD0iMCAwIDI3IDM4Ij48cGF0aCBkPSJNMjMuMzMzIDE0LjMzM2MwIDcuMzMzLTkuOTk5IDIxLjMzMy05Ljk5OSAyMS4zMzNTMy4zMzMgMjEuNjY2IDMuMzMzIDE0LjMzM2MwLTUuNSAzLjY2Ny05LjE2NyA5LjE2Ny05LjE2N3M5LjE2NyAzLjY2NyA5LjE2NyA5LjE2N3oiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEzIiByPSI1IiBmaWxsPSIjZmZmIi8+PC9zdmc+",
     iconSize: [27, 38],
     iconAnchor: [13, 38]
   });
 
-  // 攤位藍色 Icon (為其他攤位建立一個專屬的藍色 Icon)
+  // 攤位藍色 Icon
   const blueIcon = new L.Icon({
     iconUrl:
       "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDA3RkZG”IHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjI3IiBoZWlnaHQ9IjM4IiB2aWV3Qm94PSIwIDAgMjcgMzgiPjxwYXRoIGQ9Ik0yMy4zMzMgMTQuMzMzYzAgNy4zMzMtOS45OTkgMjEuMzMzLTkuOTk5IDIxLjMzM1MzLjMzMyAyMS42NjYgMy4zMzMgMTQuMzMzYzAtNS41IDMuNjY3LTkuMTY3IDkuMTY3LTkuMTY3czkuMTY3IDMuNjY3IDkuMTY3IDkuMTY3eiIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTMiIHI9IjUiIGZpbGw9IiNmZmYiLz48L3N2Zz4=",
@@ -146,13 +140,15 @@
 
   // ========= 地圖初始化 =========
   const map = L.map("map", {
-    zoomControl: true, // 啟用縮放控制按鈕
-    worldCopyJump: false // 防止地圖在地球邊緣重複顯示
+    zoomControl: true,
+    worldCopyJump: false
   });
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19 // 設定最大縮放級別
+    maxZoom: 19
   }).addTo(map);
-  map.setView(initialCenter, initialZoom); // 設定地圖初始中心點和縮放級別
+
+  // 設定地圖初始中心點為教會位置，並設定縮放級別
+  map.setView(churchLatLng, initialZoom);
 
   // 畫隱藏攤位的紅色區間線
   L.polygon(hiddenAreaCoords, {
@@ -163,18 +159,16 @@
 
   // ========= Toast 提示 =========
   const toastEl = document.getElementById("toast");
-  function showToast(msg, ms = 3000) { // 延長顯示時間，並增加淡入淡出效果
-    clearTimeout(toastEl.hideTimeout); // 清除之前的隱藏定時器
+  function showToast(msg, ms = 3000) {
+    clearTimeout(toastEl.hideTimeout);
     toastEl.textContent = msg;
     toastEl.style.display = "block";
-    // 強制瀏覽器重繪，以確保 transition 生效
-    void toastEl.offsetWidth;
+    void toastEl.offsetWidth; // 觸發重繪
     toastEl.classList.add("show");
 
     toastEl.hideTimeout = setTimeout(() => {
       toastEl.classList.remove("show");
-      // 等待淡出動畫完成後再隱藏
-      setTimeout(() => toastEl.style.display = "none", 300); // 這裡的300ms應與CSS中的transition時間匹配
+      setTimeout(() => toastEl.style.display = "none", 300);
     }, ms);
   }
 
@@ -183,35 +177,28 @@
   let userMarker = null;
   let userCircle = null;
 
-  // 檢查瀏覽器是否支援地理定位
   if ("geolocation" in navigator) {
     navigator.geolocation.watchPosition(
       pos => {
-        // 成功取得定位
         userLatLng = [pos.coords.latitude, pos.coords.longitude];
 
         if (!userMarker) {
-          // 第一次取得定位，創建標記和圓圈
           userMarker = L.marker(userLatLng, { icon: yellowIcon }).addTo(map);
-          userMarker.bindPopup("您目前的位置").openPopup(); // 預設打開，讓用戶看到自己的位置
+          userMarker.bindPopup("您目前的位置").openPopup();
           userCircle = L.circle(userLatLng, {
-            radius: pos.coords.accuracy || 20, // 使用定位精度，若無則預設20米
+            radius: pos.coords.accuracy || 20,
             color: "#FFD700",
-            weight: 1, // 圓圈邊框粗細
+            weight: 1,
             fillOpacity: 0.15
           }).addTo(map);
           showToast("已定位到您的位置（黃色）");
-          // 首次定位後，可以考慮將地圖視野移動到使用者位置，但這裡不強制以免干擾用戶
-          // map.setView(userLatLng, map.getZoom());
         } else {
-          // 後續更新定位
           userMarker.setLatLng(userLatLng);
           userCircle.setLatLng(userLatLng);
           userCircle.setRadius(pos.coords.accuracy || 20);
         }
       },
       err => {
-        // 錯誤處理
         console.error("Geolocation error:", err);
         let msg = "無法取得您的位置。";
         switch (err.code) {
@@ -231,13 +218,12 @@
         showToast(msg);
       },
       {
-        enableHighAccuracy: true, // 啟用高精度定位
-        maximumAge: 5000,         // 位置資訊的最大緩存時間（毫秒），5秒內使用緩存
-        timeout: 15000            // 請求逾時時間（毫秒），15秒內必須取得位置
+        enableHighAccuracy: true,
+        maximumAge: 5000,
+        timeout: 15000
       }
     );
   } else {
-    // 瀏覽器不支援地理定位
     showToast("您的瀏覽器不支援定位功能。");
   }
 
@@ -245,35 +231,45 @@
   // ========= 標記教會 + 攤位 =========
   const spots = [
     { label: "卓越台北幸福行道會", coord: churchLatLng, icon: redIcon },
-    { label: "攤位 A", coord: boothALatLng, icon: blueIcon }, // 指定藍色 Icon
-    { label: "攤位 B", coord: boothBLatLng, icon: blueIcon }, // 指定藍色 Icon
-    { label: "攤位 C", coord: boothCLatLng, icon: blueIcon }, // 指定藍色 Icon
-    { label: "攤位 D", coord: boothDLatLng, icon: blueIcon }  // 指定藍色 Icon
+    { label: "攤位 A", coord: boothALatLng, icon: blueIcon },
+    { label: "攤位 B", coord: boothBLatLng, icon: blueIcon },
+    { label: "攤位 C", coord: boothCLatLng, icon: blueIcon },
+    { label: "攤位 D", coord: boothDLatLng, icon: blueIcon }
   ];
 
-  // 普通攤位 & 教會
-  spots.forEach(s => {
-    // 使用三元運算符來決定是否傳入 icon 選項
-    L.marker(s.coord, s.icon ? { icon: s.icon } : {})
-      .addTo(map)
-      .bindPopup(`${s.label}<br><small>點我開啟 Google Maps 導航</small>`)
-      .on("click", () => {
-        if (!userLatLng) {
-          showToast("尚未取得您的目前位置，無法啟動導航。請稍候或檢查定位權限。");
-          return;
-        }
+  // 用來儲存 marker 實例，以便後面操作 (例如預設開啟某個 popup)
+  const markerInstances = [];
 
-        const url =
-          `https://www.google.com/maps/dir/?api=1` +
-          `&origin=${userLatLng[0]},${userLatLng[1]}` +
-          `&destination=${s.coord[0]},${s.coord[1]}` +
-          `&travelmode=walking`; // 設定步行導航
-        window.open(url, "_blank"); // 在新頁籤開啟 Google Maps
-        showToast(`正在導航至「${s.label}」`);
-      });
+  spots.forEach(s => {
+    const marker = L.marker(s.coord, { icon: s.icon }) // 確保 icon 屬性始終存在
+      .addTo(map)
+      .bindPopup(`${s.label}<br><small>點我開啟 Google Maps 導航</small>`);
+
+    markerInstances.push({ ...s, marker }); // 將 marker 實例存入陣列
+
+    marker.on("click", () => {
+      if (!userLatLng) {
+        showToast("尚未取得您的目前位置，無法啟動導航。請稍候或檢查定位權限。");
+        return;
+      }
+
+      const url =
+        `https://www.google.com/maps/dir/?api=1` +
+        `&origin=${userLatLng[0]},${userLatLng[1]}` +
+        `&destination=${s.coord[0]},${s.coord[1]}` +
+        `&travelmode=walking`;
+      window.open(url, "_blank");
+      showToast(`正在導航至「${s.label}」`);
+    });
   });
 
-  // 紫色的隱藏攤位 marker
+  // 預設開啟教會的泡泡 (Popup)
+  const churchMarker = markerInstances.find(item => item.label === "卓越台北幸福行道會");
+  if (churchMarker) {
+    churchMarker.marker.openPopup();
+  }
+
+  // 紫色的隱藏攤位 marker (保持不變)
   L.marker(hiddenBoothLatLng, { icon: purpleIcon })
     .addTo(map)
     .bindPopup(`隱藏攤位<br><small>點我開啟 Google Maps 導航</small>`)
