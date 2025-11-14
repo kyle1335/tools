@@ -167,7 +167,7 @@
   spots.forEach(s => {
     const marker = L.marker(s.coord, { icon: s.icon })
       .addTo(map)
-      .bindPopup(`${s.name}<br><small>關閉資訊框後，再點一次即可導航</small>`);
+      .bindPopup(`${s.name}<br><small>再點一次座標即可導航</small>`);
 
     // popup 關閉時，記錄這個地標名稱
     marker.on("popupclose", () => {
